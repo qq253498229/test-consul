@@ -1,0 +1,37 @@
+version: "3"
+services:
+  consul-agent-1: &consul-agent
+    image: consul:1.0.6
+    networks:
+      - consul-demo
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+    volumes:
+      - "./data/agent1:/consul/data"
+  consul-agent-2:
+    <<: *consul-agent
+    volumes:
+      - "./data/agent2:/consul/data"
+  consul-agent-3:
+    <<: *consul-agent
+    volumes:
+      - "./data/agent3:/consul/data"
+  consul-server-1: &consul-server
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+    volumes:
+      - "./data/server1:/consul/data"
+  consul-server-2:
+    <<: *consul-server
+    volumes:
+      - "./data/server2:/consul/data"
+  consul-server-bootstrap:
+    <<: *consul-agent
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+    volumes:
+      - "./data/bootstrap:/consul/data"
+networks:
+  consul-demo:
